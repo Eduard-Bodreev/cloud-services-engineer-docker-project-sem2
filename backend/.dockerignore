@@ -1,0 +1,16 @@
+.git
+.gitignore
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+**/__pycache__
+*.log
+*.tmp
+*.swp
+vendor/
+.vscode
+.idea
+README.md

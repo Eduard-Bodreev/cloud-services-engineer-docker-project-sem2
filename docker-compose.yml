@@ -1,0 +1,71 @@
+services:
+  backend:
+    image: edik1511/docker-project-backend:latest
+    container_name: docker-project-backend
+    ports:
+      - "8081:8081"
+    networks: [app-net]
+    volumes:
+      - backend_data:/var/lib/momo
+      - backend_logs:/var/log/app
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8081/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+
+  frontend:
+    image: edik1511/docker-project-frontend:latest
+    container_name: docker-project-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks: [app-net]
+    volumes:
+      - frontend_logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    cap_add:
+      - NET_BIND_SERVICE
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx:rw,uid=101,gid=101,mode=0755
+      - /var/run:rw,uid=101,gid=101,mode=0755
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  backend_data:
+  backend_logs:
+  frontend_logs:
